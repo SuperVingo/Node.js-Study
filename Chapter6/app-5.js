@@ -4,25 +4,13 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const dotenv = require('dotenv');
 const path = require('path');
-const nunjucks = require('nunjucks');
 
 dotenv.config();
 
-const indexRouter = require('./routes');
-const userRouter = require('./routes/user');
-const mainRouter = require('./routes/main');
-const layoutRouter = require('./routes/layout');
-
 const app = express();
 app.set('port', process.env.PORT || 3000);
-app.set('view engine', 'njk');
 
-nunjucks.configure('views', {
-    express: app,
-    watch: true,
-});
-
-app.use(morgan('dev'));
+app.use(morgan('tiny'));
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -38,14 +26,39 @@ app.use(session({
     name: 'session-cookie',
 }));
 
-app.use('/', indexRouter);
-app.use('/user', userRouter);
-app.use('/main', mainRouter);
-app.use('/layout', layoutRouter);
+const multer = require('multer');
+const fs = require('fs');
+ 
+try {
+    fs.readdirSync('uploads');
+} catch (error) {
+    console.error('uploads 폴더가 없어 uploads 폴더를 생성합니다.');
+    fs.mkdirSync('uploads');
+}
 
-app.use((req, res, next) => {
-    res.status(404).send('Not Found');
-})
+const upload = multer({
+    storage: multer.diskStorage({
+        destination(req, file, done) {
+            done(null, 'uploads/');
+        },
+        filename(req, file, done) {
+            const ext = path.extname(file.originalname);
+            done(null, path.basename(file.originalname, ext) + Date.now() + ext);
+        },
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+app.get('/upload', (req, res) => {
+    res.sendFile(path.join(__dirname, 'multipart.html'));
+});
+
+app.post('/upload', upload.fields([{ name: 'image1' }, { name: 'image2' }]),
+    (req, res) => {
+        console.log(req.files, req.body);
+        res.send('ok');
+    },
+);
 
 app.use((req, res, next) => {
     console.log('모든 요청에 다 실행됩니다.');

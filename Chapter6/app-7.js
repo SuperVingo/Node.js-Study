@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const dotenv = require('dotenv');
 const path = require('path');
-const nunjucks = require('nunjucks');
 
 dotenv.config();
 
@@ -15,14 +14,10 @@ const layoutRouter = require('./routes/layout');
 
 const app = express();
 app.set('port', process.env.PORT || 3000);
-app.set('view engine', 'njk');
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
 
-nunjucks.configure('views', {
-    express: app,
-    watch: true,
-});
-
-app.use(morgan('dev'));
+app.use(morgan('tiny'));
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

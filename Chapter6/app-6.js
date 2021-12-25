@@ -4,25 +4,15 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const dotenv = require('dotenv');
 const path = require('path');
-const nunjucks = require('nunjucks');
 
 dotenv.config();
-
 const indexRouter = require('./routes');
 const userRouter = require('./routes/user');
-const mainRouter = require('./routes/main');
-const layoutRouter = require('./routes/layout');
 
 const app = express();
 app.set('port', process.env.PORT || 3000);
-app.set('view engine', 'njk');
 
-nunjucks.configure('views', {
-    express: app,
-    watch: true,
-});
-
-app.use(morgan('dev'));
+app.use(morgan('tiny'));
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -40,8 +30,6 @@ app.use(session({
 
 app.use('/', indexRouter);
 app.use('/user', userRouter);
-app.use('/main', mainRouter);
-app.use('/layout', layoutRouter);
 
 app.use((req, res, next) => {
     res.status(404).send('Not Found');
